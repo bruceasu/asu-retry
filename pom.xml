@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>asu-retry</artifactId>
+    <groupId>me.asu.retry</groupId>
+    <version>1.0.0</version>
+    <description>Very simple retry executor.</description>
+
+    <properties>
+        <!-- MAVEN配置 -->
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.test.skip>false</maven.test.skip>
+        <lombok.version>1.16.20</lombok.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <cglib.version>3.1</cglib.version>
+        <junit.version>4.12</junit.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>${cglib.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- lombok -->
+                <plugin>
+                    <groupId>org.projectlombok</groupId>
+                    <artifactId>lombok-maven-plugin</artifactId>
+                    <version>1.16.10.0</version>
+                    <configuration>
+                        <encoding>utf-8</encoding>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <phase>generate-sources</phase>
+                            <goals>
+                                <goal>delombok</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- compiler -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.5.1</version>
+                    <configuration>
+                        <fork>true</fork>
+                        <source>${maven.compiler.source}</source>
+                        <target>${maven.compiler.target}</target>
+                        <encoding>${project.build.sourceEncoding}</encoding>
+                        <compilerArgs>
+                            <!--<arg>-XX:MaxPermSize=512M</arg>-->
+                            <arg>-verbose</arg>
+                            <!--<arg>-Xlint:unchecked</arg>-->
+                            <!--<arg>-Xlint:deprecation</arg>-->
+                            <!--<arg>-bootclasspath</arg>-->
+                            <!--<arg>${env.JAVA_HOME}/jre/lib/rt.jar</arg>-->
+                            <!--<arg>-extdirs</arg>-->
+                            <!--<arg>${project.basedir}/src/main/webapp/WEB-INF/lib</arg>-->
+                        </compilerArgs>
+                    </configuration>
+                </plugin>
+                <!-- jar -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.6</version>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+                                <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+                                <addClasspath>true</addClasspath>
+                                <classpathPrefix>lib/</classpathPrefix>
+                                <!--<mainClass>com.xxg.Main</mainClass>-->
+                            </manifest>
+                            <manifestEntries>
+                                <Specification-Title>${project.artifactId}</Specification-Title>
+                                <Specification-Version>${project.version}</Specification-Version>
+                                <Implementation-Title>${project.name}</Implementation-Title>
+                                <Implementation-Version>${project.version}</Implementation-Version>
+                                <Built-By>Base Platform Team</Built-By>
+                            </manifestEntries>
+                        </archive>
+                        <!-- 由具体的项目自己指定 -->
+                        <!--<excludes>-->
+                        <!--<exclude>**/*.properties</exclude>-->
+                        <!--<exclude>**/*.xml</exclude>-->
+                        <!--<exclude>**/*.json</exclude>-->
+                        <!--<exclude>**/*.groovy</exclude>-->
+                        <!--<exclude>**/*.py</exclude>-->
+                        <!--<exclude>**/*.jar</exclude>-->
+                        <!--</excludes>-->
+                    </configuration>
+                </plugin>
+                <!-- dependency -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.10</version>
+                    <executions>
+                        <execution>
+                            <id>copy-dependencies</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- war -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>2.1.1</version>
+                </plugin>
+                <!-- source -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.0.0</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>install</phase>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- javadoc -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.10.3</version>
+                    <configuration>
+                        <!-- 配置无效，配置全局环境变量
+                        JAVA_TOOL_OPTIONS =  -Dfile.encoding=UTF-8
+                        -->
+                        <charset>UTF-8</charset>
+                        <encoding>UTF-8</encoding>
+                        <show>private</show>
+                        <nohelp>true</nohelp>
+                        <aggregate>true</aggregate>
+                        <additionalparam>-Xdoclint:none</additionalparam>
+                        <tags>
+                            <tag>
+                                <name>date</name>
+                                <placement>a</placement>
+                                <head>创建日期</head>
+                            </tag>
+                            <tag>
+                                <name>copyright</name>
+                                <placement>a</placement>
+                                <head>版权:</head>
+                            </tag>
+                        </tags>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <phase>install</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- install -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.3.1</version>
+                </plugin>
+                <!-- deploy -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.8.2</version>
+                    <configuration>
+                        <uniqueVersion>false</uniqueVersion>
+                    </configuration>
+                </plugin>
+                <!-- surefire -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.17</version>
+                    <configuration>
+                        <skip>${maven.test.skip}</skip>
+                    </configuration>
+                </plugin>
+                <!-- assembly -->
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.5.3</version>
+                    <!--<configuration>-->
+                    <!--<descriptor>assembly/dist.xml</descriptor>-->
+                    <!--</configuration>-->
+                    <!--
+                    <executions>
+                        <execution>
+                            <id>make-program</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+
+                                <finalName>${project.artifactId}-bin</finalName>
+                                <appendAssemblyId>false</appendAssemblyId>
+                                <attach>false</attach>
+                                <descriptors>
+                                    <descriptor>assembly/program.xml</descriptor>
+                                </descriptors>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>make-config</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                            <configuration>
+                                <finalName>${project.artifactId}-config</finalName>
+                                <appendAssemblyId>false</appendAssemblyId>
+                                <attach>false</attach>
+                                <descriptors>
+                                    <descriptor>assembly/config.xml</descriptor>
+                                </descriptors>
+                            </configuration>
+                        </execution>
+                    </executions>
+                    -->
+                </plugin>
+                <!-- spring-boot -->
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                    <configuration>
+                        <layout>ZIP</layout>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>repackage</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <!-- lombok -->
+            <plugin>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-maven-plugin</artifactId>
+            </plugin>
+            <!-- compiler -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <!-- jar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+            </plugin>
+            <!-- javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <!-- source -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <!-- install -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+            </plugin>
+            <!-- surefire -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <!-- deploy -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
